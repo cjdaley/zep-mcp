@@ -13,6 +13,22 @@ MCP server for the [Zep Cloud](https://www.getzep.com/) API — a context engine
 >
 > Keeping the old git history because it's kinda funny lmao
 
+## Use cases
+
+I use this for my own content — ingesting video scripts and viewer comments into Zep's knowledge graph to understand what I've covered, what my audience cares about, and what I should make next.
+
+**Map your content knowledge graph** — ingest your scripts and audience comments. Zep auto-extracts topics, entities (e.g. people, groups, ideas), and the relationships between them across everything you've published.
+
+![Full knowledge graph built from content scripts and viewer comments](docs/demo-1-graph.png)
+
+**See what topics cluster together** — explore how a specific entity connects to content pieces and topics. Blue nodes are your actual content; the surrounding topics show what themes appear across those videos and what commenters associate with that entity.
+
+![Entity relationship view showing startup connected to content and related topics from comments](docs/demo-2-relationships.png)
+
+**Find content gaps** — query for entities with many topic and entity connections but no linked content nodes. Those are things your audience is already thinking and talking about that you haven't made a video on yet.
+
+![Rich Asians entity with many topic connections but no content nodes — a content gap](docs/demo-3-content-gaps.png)
+
 ## Setup
 
 ```bash
