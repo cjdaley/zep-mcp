@@ -18,4 +18,4 @@ toolsets = [t.strip() for t in toolsets]
 register_all(mcp, zep, toolsets)
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(transport="sse", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
