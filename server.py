@@ -18,4 +18,15 @@ toolsets = [t.strip() for t in toolsets]
 register_all(mcp, zep, toolsets)
 
 if __name__ == "__main__":
-    mcp.run(transport="sse", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    import uvicorn
+    from starlette.middleware.cors import CORSMiddleware
+
+    app = mcp.http_app(transport="sse")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
