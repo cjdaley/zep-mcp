@@ -1,3 +1,2 @@
 [deploy]
 startCommand = "python server.py"
-healthcheckPath = "/mcp"
