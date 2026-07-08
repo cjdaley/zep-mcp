@@ -1,4 +1,10 @@
-from typing import Literal
+import json
+from typing import Literal, TypedDict
+
+
+class UserInstructionDict(TypedDict):
+    name: str
+    text: str
 
 
 def register(mcp, zep):
@@ -11,11 +17,12 @@ def register(mcp, zep):
         email: str | None = None,
         first_name: str | None = None,
         last_name: str | None = None,
-        metadata: dict | None = None,
+        metadata: str | None = None,
         page_number: int | None = None,
         page_size: int | None = None,
     ):
-        """Manage users in Zep Cloud. Actions: create, get, update, delete, list, warm."""
+        """Manage users in Zep Cloud. Actions: create, get, update, delete, list, warm.
+        metadata accepts a JSON string (e.g. '{"key": "value"}')."""
         match action:
             case "create":
                 kwargs = dict(user_id=user_id)
@@ -26,7 +33,7 @@ def register(mcp, zep):
                 if last_name is not None:
                     kwargs["last_name"] = last_name
                 if metadata is not None:
-                    kwargs["metadata"] = metadata
+                    kwargs["metadata"] = json.loads(metadata)
                 return zep.user.add(**kwargs)
             case "get":
                 return zep.user.get(user_id=user_id)
@@ -39,7 +46,7 @@ def register(mcp, zep):
                 if last_name is not None:
                     kwargs["last_name"] = last_name
                 if metadata is not None:
-                    kwargs["metadata"] = metadata
+                    kwargs["metadata"] = json.loads(metadata)
                 return zep.user.update(**kwargs)
             case "delete":
                 return zep.user.delete(user_id=user_id)
@@ -56,7 +63,7 @@ def register(mcp, zep):
     @mcp.tool(tags={"admin"}, annotations={"destructiveHint": True})
     def manage_user_instructions(
         action: Literal["list", "add", "delete"],
-        instructions: list[dict] | None = None,
+        instructions: list[UserInstructionDict] | None = None,
         user_ids: list[str] | None = None,
     ):
         """Manage user summary instructions. Actions: list, add, delete.
