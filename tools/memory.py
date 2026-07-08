@@ -1,4 +1,11 @@
-from typing import Literal
+import json
+from typing import Literal, TypedDict, NotRequired
+
+
+class MessageDict(TypedDict):
+    role: str
+    content: str
+    name: NotRequired[str]
 
 
 def register(mcp, zep):
@@ -13,7 +20,6 @@ def register(mcp, zep):
         limit: int = 10,
         reranker: Literal["rrf", "mmr", "node_distance", "episode_mentions", "cross_encoder"] | None = None,
         mmr_lambda: float | None = None,
-        search_filters: dict | None = None,
     ):
         """Search a knowledge graph for relevant facts, entities, or episodes.
         Keep queries concise and specific for best results."""
@@ -30,8 +36,6 @@ def register(mcp, zep):
             kwargs["reranker"] = reranker
         if mmr_lambda is not None:
             kwargs["mmr_lambda"] = mmr_lambda
-        if search_filters is not None:
-            kwargs["search_filters"] = search_filters
         return zep.graph.search(**kwargs)
 
     @mcp.tool(tags={"memory"}, annotations={"readOnlyHint": True})
@@ -42,7 +46,7 @@ def register(mcp, zep):
     @mcp.tool(tags={"memory"})
     def add_messages(
         thread_id: str,
-        messages: list[dict],
+        messages: list[MessageDict],
     ):
         """Add messages to a thread. Each message needs 'role' (user/assistant/system),
         'content', and optionally 'name'."""
@@ -74,12 +78,14 @@ def register(mcp, zep):
         target_node_name: str | None = None,
         valid_at: str | None = None,
         invalid_at: str | None = None,
-        source_node_attributes: dict | None = None,
-        edge_attributes: dict | None = None,
-        target_node_attributes: dict | None = None,
+        source_node_attributes: str | None = None,
+        edge_attributes: str | None = None,
+        target_node_attributes: str | None = None,
     ):
         """Add data to a knowledge graph. Types: text, json, message, or triple.
-        For triple: provide fact, fact_name, source_node_name, and target_node_name."""
+        For triple: provide fact, fact_name, source_node_name, and target_node_name.
+        source_node_attributes, edge_attributes, and target_node_attributes accept
+        JSON strings (e.g. '{"key": "value"}')."""
         from utils import _require_one_of
         _require_one_of(user_id=user_id, graph_id=graph_id)
         if type == "triple":
@@ -96,11 +102,11 @@ def register(mcp, zep):
             if invalid_at is not None:
                 kwargs["invalid_at"] = invalid_at
             if source_node_attributes is not None:
-                kwargs["source_node_attributes"] = source_node_attributes
+                kwargs["source_node_attributes"] = json.loads(source_node_attributes)
             if edge_attributes is not None:
-                kwargs["edge_attributes"] = edge_attributes
+                kwargs["edge_attributes"] = json.loads(edge_attributes)
             if target_node_attributes is not None:
-                kwargs["target_node_attributes"] = target_node_attributes
+                kwargs["target_node_attributes"] = json.loads(target_node_attributes)
             return zep.graph.add_fact_triple(**kwargs)
         return zep.graph.add(
             user_id=user_id, graph_id=graph_id, type=type, data=data,
