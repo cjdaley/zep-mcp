@@ -1,4 +1,22 @@
-from typing import Literal
+import json
+from typing import Literal, TypedDict, NotRequired
+
+
+class EntityTypeDict(TypedDict):
+    name: str
+    description: NotRequired[str]
+
+
+class EdgeTypeDict(TypedDict):
+    name: str
+    description: NotRequired[str]
+    source_entity_type: NotRequired[str]
+    target_entity_type: NotRequired[str]
+
+
+class GraphInstructionDict(TypedDict):
+    name: str
+    text: str
 
 
 def register(mcp, zep):
@@ -56,9 +74,9 @@ def register(mcp, zep):
             "add_instructions", "list_instructions", "delete_instructions",
             "detect_patterns",
         ],
-        entity_types: list[dict] | None = None,
-        edge_types: list[dict] | None = None,
-        instructions: list[dict] | None = None,
+        entity_types: list[EntityTypeDict] | None = None,
+        edge_types: list[EdgeTypeDict] | None = None,
+        instructions: list[GraphInstructionDict] | None = None,
         user_id: str | None = None,
         graph_id: str | None = None,
         user_ids: list[str] | None = None,
@@ -133,12 +151,17 @@ def register(mcp, zep):
         summary: str | None = None,
         fact: str | None = None,
         labels: list[str] | None = None,
-        attributes: dict | None = None,
+        attributes: str | None = None,
         limit: int | None = None,
         cursor: str | None = None,
     ):
         """Inspect and manage graph nodes, edges, and episodes.
-        Scope selects the entity type; action selects the operation."""
+        Scope selects the entity type; action selects the operation.
+        attributes accepts a JSON string (e.g. '{"key": "value"}')."""
+        if action == "list":
+            from utils import _require_one_of
+            _require_one_of(user_id=user_id, graph_id=graph_id)
+
         match (scope, action):
             case ("node", "get"):
                 return zep.graph.node.get(uuid=uuid)
@@ -151,14 +174,19 @@ def register(mcp, zep):
                 if labels is not None:
                     kwargs["labels"] = labels
                 if attributes is not None:
-                    kwargs["attributes"] = attributes
+                    kwargs["attributes"] = json.loads(attributes)
                 return zep.graph.node.update(**kwargs)
             case ("node", "delete"):
                 return zep.graph.node.delete(uuid=uuid)
             case ("node", "list"):
+                kwargs = {}
+                if limit is not None:
+                    kwargs["limit"] = limit
+                if cursor is not None:
+                    kwargs["cursor"] = cursor
                 if user_id:
-                    return zep.graph.node.get_by_user_id(user_id=user_id, limit=limit, cursor=cursor)
-                return zep.graph.node.get_by_graph_id(graph_id=graph_id, limit=limit, cursor=cursor)
+                    return zep.graph.node.get_by_user_id(user_id=user_id, **kwargs)
+                return zep.graph.node.get_by_graph_id(graph_id=graph_id, **kwargs)
             case ("node", "get_edges"):
                 return zep.graph.node.get_edges(uuid=uuid)
             case ("node", "get_episodes"):
@@ -172,14 +200,19 @@ def register(mcp, zep):
                 if name is not None:
                     kwargs["name"] = name
                 if attributes is not None:
-                    kwargs["attributes"] = attributes
+                    kwargs["attributes"] = json.loads(attributes)
                 return zep.graph.edge.update(**kwargs)
             case ("edge", "delete"):
                 return zep.graph.edge.delete(uuid_=uuid)
             case ("edge", "list"):
+                kwargs = {}
+                if limit is not None:
+                    kwargs["limit"] = limit
+                if cursor is not None:
+                    kwargs["cursor"] = cursor
                 if user_id:
-                    return zep.graph.edge.get_by_user_id(user_id=user_id, limit=limit, cursor=cursor)
-                return zep.graph.edge.get_by_graph_id(graph_id=graph_id, limit=limit, cursor=cursor)
+                    return zep.graph.edge.get_by_user_id(user_id=user_id, **kwargs)
+                return zep.graph.edge.get_by_graph_id(graph_id=graph_id, **kwargs)
             case ("episode", "get"):
                 return zep.graph.episode.get(uuid_=uuid)
             case ("episode", "delete"):
