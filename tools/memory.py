@@ -111,3 +111,47 @@ def register(mcp, zep):
         return zep.graph.add(
             user_id=user_id, graph_id=graph_id, type=type, data=data,
         )
+
+    @mcp.tool(tags={"memory"})
+    def create_graph(
+        graph_id: str,
+        name: str | None = None,
+        description: str | None = None,
+        time_zone: str | None = None,
+    ):
+        """Create a standalone knowledge graph.
+
+        The graph must exist before add_graph_data or search_graph can use it —
+        writing to a missing graph_id returns 404. graph_id is required.
+        Optional name and description are routing metadata shown by list_graphs.
+        """
+        kwargs = dict(graph_id=graph_id)
+        if name is not None:
+            kwargs["name"] = name
+        if description is not None:
+            kwargs["description"] = description
+        if time_zone is not None:
+            kwargs["time_zone"] = time_zone
+        return zep.graph.create(**kwargs)
+
+    @mcp.tool(tags={"memory"}, annotations={"readOnlyHint": True})
+    def list_graphs(
+        search: str | None = None,
+        page_number: int = 1,
+        page_size: int = 20,
+        order_by: Literal["created_at", "graph_id", "name"] | None = None,
+        asc: bool | None = None,
+    ):
+        """List standalone graphs in this project (directory metadata only).
+
+        Does not search graph contents. Optional search filters graph_id, name,
+        and description. Use a returned graph_id with add_graph_data or search_graph.
+        """
+        kwargs = dict(page_number=page_number, page_size=page_size)
+        if search is not None:
+            kwargs["search"] = search
+        if order_by is not None:
+            kwargs["order_by"] = order_by
+        if asc is not None:
+            kwargs["asc"] = asc
+        return zep.graph.list_all(**kwargs)
